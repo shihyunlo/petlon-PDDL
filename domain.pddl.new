@@ -4,7 +4,7 @@
 
     (:types 
         person door container - thing
-        newsstand fridge initial - container 
+        newsstand fridge table printer initial - container 
         room
     )
 

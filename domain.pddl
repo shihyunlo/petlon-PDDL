@@ -1,10 +1,10 @@
 (define (domain petlon)
 
-    (:requirements :typing :action-costs)
+    (:requirements :typing :action-costs :strips :adl)
 
     (:types 
         person door container - thing
-        newsstand fridge initial - container 
+        newsstand fridge table printer initial - container 
         room
     )
 
@@ -18,12 +18,10 @@
         (delivered ?c - container ?p - person)
     )
     
-    (:functions 
-	     (total-cost) - number
-		 (cost ?t1 ?t2 - thing) - number
-    )
+    (:functions (total-cost) - number
+		 (cost ?t1 ?t2 - thing) - number)
 
-    (:action moveto
+    (:action movetoroom
         :parameters (?r1 ?r2 - room ?from - thing ?to - door)
         :precondition (and (at ?r1)
                            (hasdoor ?r1 ?to)			     
@@ -32,33 +30,42 @@
                       )
         :effect (and (beside ?to)
                      (at ?r2)
+                     (not (beside ?from))
+                     (not (at ?r1))
+                     (increase (total-cost) (cost ?from ?to))
+                )
+    )
+    (:action movetothing
+        :parameters (?r - room ?from - thing ?to - thing)
+        :precondition (and (at ?r)
+			    		   (beside ?from)
+                           (or (hasdoor ?r ?to)
+							   (located ?to ?r)
+							   (inside ?to ?r)
+						   )   
+                      )
+        :effect (and (beside ?to)
+                     (at ?r)
+                     (not (beside ?from))
                      (increase (total-cost) (cost ?from ?to))
                 )
     )
 
-    (:action visit
-        :parameters (?r - room ?from - door ?to - container)
-        :precondition (and (at ?r)
-			                (beside ?from)
-                            (located ?to ?r)
+    (:action load
+        :parameters (?to - container)
+        :precondition (and (beside ?to)
                       )
-        :effect (and (beside ?to)
-                     (loaded ?to)
-                     (increase (total-cost) (cost ?from ?to))
+        :effect (and (loaded ?to)
                 )
     )
 
     (:action deliver
-        :parameters (?to - person ?r - room ?from - door ?c - container)
+        :parameters (?p - person ?c - container)
         :precondition (and (loaded ?c)
-			               (beside ?from)
-                           (at ?r) 
-			               (inside ?to ?r)
+			               (beside ?p)
                        )
-        :effect (and (delivered ?c ?to)
-                     (beside ?to)
-                     (not (loaded ?c))
-                     (increase (total-cost) (cost ?from ?to))
+        :effect (and (delivered ?c ?p)
+			         (not (loaded ?c))
                 )
     )
  
